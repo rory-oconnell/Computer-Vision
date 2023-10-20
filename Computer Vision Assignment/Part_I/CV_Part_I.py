@@ -37,7 +37,7 @@ def ConvertHSV(img):
 if __name__ == '__main__':
 
     # Directory containing the images
-    img_dir = "Assignment1/Balls"
+    img_dir = "Computer Vision Assignment\Part_I\Balls"
 
     # Get list of all images in the directory
     img_files = [f for f in os.listdir(img_dir) if f.startswith('Ball') and f.endswith('.jpg')]
