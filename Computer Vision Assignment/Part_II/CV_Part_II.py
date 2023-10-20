@@ -41,6 +41,20 @@ if __name__ == '__main__':
         # Resize the image
         img = rescaleFrame(img, 0.25)
 
+        # Convert to grayscale
+        grey = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+        # Good features to track
+        corners = cv.goodFeaturesToTrack(grey, 50, 0.01, 10) # 4 corners, quality level, min distance between corners
+
+        # Convert corners to integers
+        corners = np.int0(corners)
+
+        # Draw the corners
+        for corner in corners:
+            x, y = corner.ravel()
+            cv.circle(img, (x, y), 3, 255, -1)
+
         cv.imshow('Table', img)
 
         # Wait for a key press
