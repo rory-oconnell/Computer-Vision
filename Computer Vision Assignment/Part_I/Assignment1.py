@@ -1,3 +1,12 @@
+# Part I.  
+# Locate the table tennis ball.  Using colour, regions and shape locate table tennis balls 
+# and table tennis tables in the supplied images (See https://www.scss.tcd.ie/Kenneth.Dawson-Howe/Vision/balls.zip for the ball images 
+# with ground truth).  You can assume that the ball is either white or orange, may have some printing on it and will be spherical.  
+# Ensure that you use techniques which can be used in general (e.g. ideally the techniques would cope with changes in lighting, etc.).  
+# Analyse how well your approach works on the static images of the tables provided, and later on the table tennis video.  
+# Note that in the report you may need to use some of the Learning and Evaluation section of the course, 
+# also in section 9.3 of “Computer Vision with OpenCV”  (when reporting performance).
+
 import cv2 as cv
 import numpy as np
 import os
