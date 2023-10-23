@@ -13,6 +13,9 @@ image = rescaleFrame(image, 0.25)
  
 # Convert image to grayscale
 gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+
+# Blur the image for better edge detection
+gray = cv2.blur(gray,(5,5))
  
 # Use canny edge detection
 edges = cv2.Canny(gray,50,150,apertureSize=3)
