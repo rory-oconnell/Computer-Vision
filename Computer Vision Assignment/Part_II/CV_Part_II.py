@@ -78,32 +78,29 @@ if __name__ == '__main__':
         # Resize the image
         img = rescaleFrame(img, 0.25)
 
-        # Hough Line Transform
-        HoughLineTransform(img)
+        blank = np.zeros(img.shape, dtype='uint8')
+        # cv.imshow('Blank', blank)
 
         # Convert to greyscale
         grey = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
-        # # Good features to track
-        # corners = cv.goodFeaturesToTrack(grey, 50, 0.01, 10) # 4 corners, quality level, min distance between corners
+        # Apply Gaussian Blur
+        blur = cv.GaussianBlur(grey, (5,5), cv.BORDER_DEFAULT)
+        # cv.imshow('Blur', blur)
 
-        # # Apply Hough Line Detection
-        # lines = cv.HoughLinesP(grey, 1, np.pi/180, 1, minLineLength=100, maxLineGap=100) # The parameters are img, rho, theta, threshold, minLineLength, maxLineGap
+        canny = cv.Canny(blur, 125, 175)
+        cv.imshow('Canny Edges', canny)
 
-        # # Draw the lines
-        # for line in lines:
-        #     x1, y1, x2, y2 = line[0]
-        #     cv.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
- 
-        # # Convert corners to integers
-        # corners = np.int0(corners)
- 
-        # # Draw the corners
-        # for corner in corners:
-        #     x, y = corner.ravel()
-        #     cv.circle(img, (x, y), 3, 255, -1)
+        # ret, thresh = cv.threshold(gray, 125, 255, cv.THRESH_BINARY)
+        # cv.imshow('Thresh', thresh)
 
-        cv.imshow('Table', img)
+        contours, hierarchies = cv.findContours(canny, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
+        print(f'{len(contours)} contour(s) found!')
+
+        cv.drawContours(blank, contours, -1, (0,0,255), 1)
+        cv.imshow('Contours Drawn', blank)
+
+        cv.imshow('Table', grey)
 
         # Wait for a key press
         key = cv.waitKey(0)
