@@ -66,6 +66,8 @@ if __name__ == '__main__':
         
         img_hsv = ConvertToHSV(img)
         mask = ThresholdImageForBalls(img_hsv)
+        cv.imshow('mask', mask)
+
         img_detected = FindBalls(mask, img.copy())
 
         cv.imshow('detected balls', img_detected)
