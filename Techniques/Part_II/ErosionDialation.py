@@ -44,6 +44,9 @@ if __name__ == '__main__':
         # Greyscale the image
         img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
+        # Apply Gaussian blur
+        img = cv.GaussianBlur(img, (17, 17), 0)
+
         for i in range(5):
             # Erode the image
             kernel = np.ones((5, 5), np.uint8)

@@ -4,7 +4,7 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
 
-img = cv.imread('opencv-course\Resources\Photos\cats.jpg')
+img = cv.imread('opencv_tutorial\Resources\Photos\cats.jpg')
 cv.imshow('Cats', img)
 
 blank = np.zeros(img.shape[:2], dtype='uint8')
