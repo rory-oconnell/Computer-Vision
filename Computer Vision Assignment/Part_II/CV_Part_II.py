@@ -1,58 +1,85 @@
-# Part II. 
-# Locate the table tennis table.  You must now locate the corners of the table (the outside of the white lines) 
-# using edge detection, and then transform the image so that you have a plan view of the table.  
-# Determine how well your approach works on the static images of the tables provided 
-# (See https://www.scss.tcd.ie/Kenneth.Dawson-Howe/Vision/tables.zip for the table images with ground truth).  
-# Ensure that you use techniques which can be used in general (e.g. ideally the techniques would cope with changes in lighting, etc.).  
-# Analyse how well your approach works on the static images of the tables provided, and later on the table tennis video.  
-# Note that in the report you may need to use some of the Learning and Evaluation section of the course, 
-# also in section 9.3 of “Computer Vision with OpenCV”  (when reporting performance).
-
-import cv2 as cv
+import cv2
 import numpy as np
-import os
+from itertools import combinations
 
 def rescaleFrame(frame, scale):
     width = int(frame.shape[1] * scale)
     height = int(frame.shape[0] * scale)
     dimensions = (width, height)
-    return cv.resize(frame, dimensions, interpolation=cv.INTER_AREA)
+    return cv2.resize(frame, dimensions, interpolation=cv2.INTER_AREA)
 
-if __name__ == '__main__':
+# Load the image
+image = cv2.imread("Techniques\Part_II\Table3.jpg")
 
-    # Directory containing the images
-    img_dir = "Computer Vision Assignment/Part_II/tables"
+# Convert the image to HSV
+hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-    # Get list of all images in the directory
-    img_files = [f for f in os.listdir(img_dir) if f.startswith('Table') and f.endswith('.jpg')]
-    img_files.sort()  # Ensure the images are in order
+# Define the range for blue color in HSV
+# These values may need tweaking depending on the exact shade of blue of your table
+lower_blue = np.array([90, 50, 50])
+upper_blue = np.array([140, 255, 255])
 
-    for img_file in img_files:
-        img_path = os.path.join(img_dir, img_file)
+# Threshold the HSV image to get only blue colors
+mask = cv2.inRange(hsv, lower_blue, upper_blue)
 
-        # Read in an image
-        img = cv.imread(img_path)
+# Bitwise-AND mask and original image to isolate the blue table
+res = cv2.bitwise_and(image, image, mask=mask)
 
-        # Check if image is loaded correctly
-        if img is None:
-            print(f"Error: Image {img_file} not loaded!")
-            continue
+# Dilate the image
+kernel = np.ones((5, 5), np.uint8)
+res = cv2.dilate(res, kernel, iterations=1)
 
-        # Resize the image
-        img = rescaleFrame(img, 0.25)
+gray = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
 
-        #########################
-        # EXCTING STUFF GOES HERE
-        #########################
+# Create a blank image with the same dimensions as 'img'
+blank_image = np.zeros((res.shape[0], res.shape[1], 3), dtype=np.uint8)
 
-        # Show the image
-        cv.imshow('Table', img)
+# Dilate the image
+kernel = np.ones((5, 5), np.uint8)
+gray = cv2.dilate(gray, kernel, iterations=10)
 
-        # Wait for a key press
-        key = cv.waitKey(0)
+ret,thresh = cv2.threshold(gray,50,255,0)
+contours,hierarchy = cv2.findContours(thresh, 1, 2)
+print("Number of contours detected:", len(contours))
 
-        # If 'q' is pressed, exit the loop
-        if key == ord('q'):
-            break
+max_area = 0
+largest_rectangle_contour = None
 
-    cv.destroyAllWindows()
+# Iterate through the contours to find the largest rectangle
+for cnt in contours:
+    approx = cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt, True), True)
+    if len(approx) == 4:
+        area = cv2.contourArea(cnt)
+        if area > max_area:
+            max_area = area
+            largest_rectangle_contour = cnt
+
+# Draw the largest rectangle on the blank image
+if largest_rectangle_contour is not None:
+    blank_image = cv2.drawContours(blank_image, [largest_rectangle_contour], -1, (0,255,0), 3)
+
+# Detect corners
+corners = cv2.goodFeaturesToTrack(cv2.cvtColor(blank_image, cv2.COLOR_BGR2GRAY), 100, 0.01, 10)
+corners = np.int0(corners)
+
+# Function to compute the area of a quadrilateral given its vertices
+def compute_area(corner_set):
+    return cv2.contourArea(np.array(corner_set))
+
+# Find the combination of four corners that form the largest area
+max_area = 0
+best_combination = []
+for comb in combinations(corners, 4):
+    area = compute_area(comb)
+    if area > max_area:
+        max_area = area
+        best_combination = comb
+
+# Draw the selected corners
+for corner in best_combination:
+    x, y = corner.ravel()
+    cv2.circle(image, (x,y), 20, (0,0,255), -1)
+
+cv2.imshow("Shapes with Corners", rescaleFrame(image, 0.25))
+cv2.waitKey(0)
+cv2.destroyAllWindows()
