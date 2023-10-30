@@ -8,7 +8,7 @@ def rescaleFrame(frame, scale):
     return cv2.resize(frame, dimensions, interpolation=cv2.INTER_AREA)
 
 # Load the image
-image = cv2.imread("Techniques\Part_II\Table1.jpg")
+image = cv2.imread("Techniques\Part_II\Table4.jpg")
 
 # Convert the image to HSV
 hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
