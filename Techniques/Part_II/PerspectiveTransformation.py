@@ -8,6 +8,17 @@ def rescaleFrame(frame, scale):
     dimensions = (width, height)
     return cv2.resize(frame, dimensions, interpolation=cv2.INTER_AREA)
 
+def applyPerspectiveTransform(img):
+    # Source points
+    pts1 = np.float32([[0, 0], [0, 0], [0, 0], [0, 0]])
+    # Destination points
+    pts2 = np.float32([[0, 0], [100, 0], [0, 100], [100, 100]])
+    # Compute the perspective transform matrix
+    M = cv2.getPerspectiveTransform(pts1, pts2)
+    # Apply the perspective transformation to the image
+    warped_img = cv2.warpPerspective(img, M, (img.shape[1], img.shape[0]))
+    return warped_img
+
 # Load the image
 image = cv2.imread("Techniques\Part_II\Table3.jpg")
 
@@ -80,8 +91,12 @@ for corner in best_combination:
     x, y = corner.ravel()
     cv2.circle(image, (x,y), 20, (0,0,255), -1)
 
+# Apply perspective transformation to the image
+warped_img = applyPerspectiveTransform(image)
+
 
 
 cv2.imshow("Shapes with Corners", rescaleFrame(image, 0.25))
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
