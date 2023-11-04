@@ -1,51 +1,36 @@
-from __future__ import print_function
-from __future__ import division
-import cv2 as cv
+import cv2
 import numpy as np
-import argparse
+from matplotlib import pyplot as plt
 
+def rescaleFrame(frame, scale):
+    width = int(frame.shape[1] * scale)
+    height = int(frame.shape[0] * scale)
+    dimensions = (width, height)
+    return cv2.resize(frame, dimensions, interpolation=cv2.INTER_AREA)
 
-def Hist_and_Backproj(val):
-    bins = val
-    histSize = max(bins, 2)
-    ranges = [0, 180]  # hue_range
-    hist = cv.calcHist([hue], [0], None, [histSize], ranges, accumulate=False)
-    cv.normalize(hist, hist, alpha=0, beta=255, norm_type=cv.NORM_MINMAX)
-    backproj = cv.calcBackProject([hue], [0], hist, ranges, scale=1)
-    cv.imshow("BackProj", backproj)
+original_image = cv2.imread("Computer Vision Assignment\Part_II\Tables\Table1.jpg")
+hsv_original = cv2.cvtColor(original_image, cv2.COLOR_BGR2HSV)
 
-    w = 400
-    h = 400
-    bin_w = int(round(w / histSize))
-    histImg = np.zeros((h, w, 3), dtype=np.uint8)
-    for i in range(bins):
-        cv.rectangle(
-            histImg,
-            (i * bin_w, h),
-            ((i + 1) * bin_w, h - int(np.round(hist[i] * h / 255.0))),
-            (0, 0, 255),
-            cv.FILLED,
-        )
-        cv.imshow("Histogram", histImg)
+roi = cv2.imread("Computer Vision Assignment\Part_II\BlueTable.png")
+hsv_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 
+hue, saturation, value = cv2.split(hsv_roi)
 
-parser = argparse.ArgumentParser(description="Code for Back Projection tutorial.")
-parser.add_argument("--input", help="Assignment1\Balls", default="Ball2.jpg")
-args = parser.parse_args()
-src = cv.imread(cv.samples.findFile(args.input))
+# Histogram ROI
+roi_hist = cv2.calcHist([hsv_roi], [0, 1], None, [180, 256], [0, 180, 0, 256])
+mask = cv2.calcBackProject([hsv_original], [0, 1], roi_hist, [0, 180, 0, 256], 1)
 
-if src is None:
-    print("Could not open or find the image:", args.input)
-    exit(0)
-    
-hsv = cv.cvtColor(src, cv.COLOR_BGR2HSV)
-ch = (0, 0)
-hue = np.empty(hsv.shape, hsv.dtype)
-cv.mixChannels([hsv], [hue], ch)
-window_image = "Source image"
-cv.namedWindow(window_image)
-bins = 25
-cv.createTrackbar("* Hue bins: ", window_image, bins, 180, Hist_and_Backproj)
-Hist_and_Backproj(bins)
-cv.imshow(window_image, src)
-cv.waitKey()
+# Filtering remove noise
+kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+mask = cv2.filter2D(mask, -1, kernel)
+_, mask = cv2.threshold(mask, 100, 255, cv2.THRESH_BINARY)
+
+mask = cv2.merge((mask, mask, mask))
+result = cv2.bitwise_and(original_image, mask)
+
+cv2.imshow("Mask", rescaleFrame(mask, 0.25))
+cv2.imshow("Original image", rescaleFrame(original_image, 0.25))
+cv2.imshow("Result", rescaleFrame(result, 0.25))
+cv2.imshow("Roi", rescaleFrame(roi, 0.25))
+cv2.waitKey(0)
+cv2.destroyAllWindows()

@@ -11,7 +11,7 @@ import cv2 as cv
 import numpy as np
 import os
 
-def ConvertToGray(img):
+def GreyAndBlur(img):
     # Converting to grayscale
     img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     img_gray = cv.GaussianBlur(img_gray, (13, 13), cv.BORDER_DEFAULT)
@@ -32,6 +32,10 @@ def ConvertHSV(img):
     img_hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
     return img_hsv
 
+def CannyEdgeDetection(img):
+    # Canny Edge Detection
+    edges = cv.Canny(img, 100, 200)
+    return edges
 
 if __name__ == '__main__':
 
@@ -47,6 +51,7 @@ if __name__ == '__main__':
 
         # Read in an image
         img = cv.imread(img_path)
+        cv.imshow('Canny Original', CannyEdgeDetection(img))
 
         # Check if image is loaded correctly
         if img is None:
@@ -54,10 +59,7 @@ if __name__ == '__main__':
             continue
 
         # Converting to grayscale
-        img_gray = ConvertToGray(img)
-
-        # Thresholding
-        thresh = Threshold(img_gray)
+        img_gray = GreyAndBlur(img)
 
         circles = DetectCircles(img_gray)
 
@@ -72,7 +74,7 @@ if __name__ == '__main__':
                 # Print the center coordinates of the circle and the diameter
                 print(i[0], i[1], 2 * i[2])
 
-        cv.imshow('detected circles', img)
+        cv.imshow('Balls Detected', img)
 
         # Wait for a key press
         key = cv.waitKey(0)

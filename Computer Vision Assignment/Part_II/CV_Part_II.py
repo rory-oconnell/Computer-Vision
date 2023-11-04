@@ -9,7 +9,7 @@ def rescaleFrame(frame, scale):
     return cv2.resize(frame, dimensions, interpolation=cv2.INTER_AREA)
 
 # Load the image
-image = cv2.imread("Techniques\Part_II\Table3.jpg")
+image = cv2.imread("Techniques\Part_II\Table1.jpg")
 
 # Convert the image to HSV
 hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -79,8 +79,6 @@ for comb in combinations(corners, 4):
 for corner in best_combination:
     x, y = corner.ravel()
     cv2.circle(image, (x,y), 20, (0,0,255), -1)
-
-
 
 cv2.imshow("Shapes with Corners", rescaleFrame(image, 0.25))
 cv2.waitKey(0)
