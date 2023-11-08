@@ -20,7 +20,7 @@ def ThresholdImageForBalls(img_hsv):
     mask = cv.bitwise_or(mask_white, mask_orange)
 
     # Morphological operations to remove noise and fill small holes
-    kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (15, 15))
+    kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (7, 7))
     mask = cv.morphologyEx(mask, cv.MORPH_CLOSE, kernel)
 
     return mask

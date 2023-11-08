@@ -20,6 +20,7 @@ kernel = np.ones((9, 9), np.uint8)
 for i in range(100):
     dilation = cv2.morphologyEx(dilation, cv2.MORPH_OPEN, kernel)
     dilation = cv2.morphologyEx(dilation, cv2.MORPH_CLOSE, kernel)
+    cv2.imshow("Morphology", dilation)
 
 max_area = 0
 largest_rectangle_contour = None

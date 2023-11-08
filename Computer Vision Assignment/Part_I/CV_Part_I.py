@@ -51,7 +51,6 @@ if __name__ == '__main__':
 
         # Read in an image
         img = cv.imread(img_path)
-        cv.imshow('Canny Original', CannyEdgeDetection(img))
 
         # Check if image is loaded correctly
         if img is None:
