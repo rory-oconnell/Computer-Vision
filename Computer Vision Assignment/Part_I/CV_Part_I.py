@@ -1,84 +1,83 @@
-# Part I.  
-# Locate the table tennis ball.  Using colour, regions and shape locate table tennis balls 
-# and table tennis tables in the supplied images (See https://www.scss.tcd.ie/Kenneth.Dawson-Howe/Vision/balls.zip for the ball images 
-# with ground truth).  You can assume that the ball is either white or orange, may have some printing on it and will be spherical.  
-# Ensure that you use techniques which can be used in general (e.g. ideally the techniques would cope with changes in lighting, etc.).  
-# Analyse how well your approach works on the static images of the tables provided, and later on the table tennis video.  
-# Note that in the report you may need to use some of the Learning and Evaluation section of the course, 
-# also in section 9.3 of “Computer Vision with OpenCV”  (when reporting performance).
-
 import cv2 as cv
 import numpy as np
 import os
 
-def GreyAndBlur(img):
-    # Converting to grayscale
-    img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    img_gray = cv.GaussianBlur(img_gray, (13, 13), cv.BORDER_DEFAULT)
-    return img_gray
+def ConvertToHSV(img):
+    return cv.cvtColor(img, cv.COLOR_BGR2HSV)
 
-def DetectCircles(img):
-    # Detecting circles
-    circles = cv.HoughCircles(img, cv.HOUGH_GRADIENT, 1, 20, param1=50, param2=30, minRadius=15, maxRadius=80)
-    return circles
+def ThresholdImageForBalls(img_hsv):
+    # Threshold for white balls
+    lower_white = np.array([0, 0, 200])
+    upper_white = np.array([180, 60, 255])
+    mask_white = cv.inRange(img_hsv, lower_white, upper_white)
 
-def Threshold(img):
-    # Thresholding
-    ret, thresh = cv.threshold(img, 150, 255, cv.THRESH_BINARY)
-    return thresh
+    # Threshold for orange balls
+    lower_orange = np.array([0, 100, 220])
+    upper_orange = np.array([20, 255, 255])
 
-def ConvertHSV(img):
-    # Converting to HSV
-    img_hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
-    return img_hsv
+    mask_orange = cv.inRange(img_hsv, lower_orange, upper_orange)
 
-def CannyEdgeDetection(img):
-    # Canny Edge Detection
-    edges = cv.Canny(img, 100, 200)
-    return edges
+    # Combine the masks
+    mask = cv.bitwise_or(mask_white, mask_orange)
+
+    # Morphological operations to remove noise and fill small holes
+    kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3))
+    # Erode the image
+    mask = cv.erode(mask, kernel, iterations=1)
+    mask = cv.morphologyEx(mask, cv.MORPH_CLOSE, kernel)
+    mask = cv.morphologyEx(mask, cv.MORPH_OPEN, kernel)
+    
+    return mask
+
+def FindBalls(mask, img):
+    contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
+    
+    for contour in contours:
+        # Calculate circularity
+        perimeter = cv.arcLength(contour, True)
+        area = cv.contourArea(contour)
+        if perimeter == 0:
+            continue
+        circularity = 4 * np.pi * area / (perimeter * perimeter)
+        
+        # More sensitive circularity filter
+        if circularity > 0.4:  # Lowered the threshold for circularity
+            (x, y), radius = cv.minEnclosingCircle(contour)
+            radius = int(radius)
+            
+            if radius >= 15 and radius <= 50:  # Only consider circles with radius 30 pixels or more
+                center = (int(x), int(y))
+                
+                # Draw the circle on the image
+                cv.circle(img, center, radius, (0, 255, 0), 2)
+                cv.circle(img, center, 2, (0, 0, 255), 3)
+
+                # Print the center coordinates of the circle and the diameter
+                print(center[0], center[1], 2 * radius)
+            
+    return img
 
 if __name__ == '__main__':
-
-    # Directory containing the images
     img_dir = "Computer Vision Assignment\Part_I\Balls"
-
-    # Get list of all images in the directory
     img_files = [f for f in os.listdir(img_dir) if f.startswith('Ball') and f.endswith('.jpg')]
-    img_files.sort()  # Ensure the images are in order
+    img_files.sort()
 
     for img_file in img_files:
         img_path = os.path.join(img_dir, img_file)
-
-        # Read in an image
         img = cv.imread(img_path)
 
-        # Check if image is loaded correctly
         if img is None:
             print(f"Error: Image {img_file} not loaded!")
             continue
+        
+        img_hsv = ConvertToHSV(img)
+        mask = ThresholdImageForBalls(img_hsv)
+        cv.imshow('mask', mask)
 
-        # Converting to grayscale
-        img_gray = GreyAndBlur(img)
+        img_detected = FindBalls(mask, img.copy())
 
-        circles = DetectCircles(img_gray)
-
-        if circles is not None:
-            circles = np.uint16(np.around(circles))
-            for i in circles[0, :]:
-                # draw the outer circle
-                cv.circle(img, (i[0], i[1]), i[2], (0, 255, 0), 2)
-                # draw the center of the circle
-                cv.circle(img, (i[0], i[1]), 2, (0, 0, 255), 3)
-
-                # Print the center coordinates of the circle and the diameter
-                print(i[0], i[1], 2 * i[2])
-
-        cv.imshow('Balls Detected', img)
-
-        # Wait for a key press
+        cv.imshow('detected balls', img_detected)
         key = cv.waitKey(0)
-
-        # If 'q' is pressed, exit the loop
         if key == ord('q'):
             break
 
