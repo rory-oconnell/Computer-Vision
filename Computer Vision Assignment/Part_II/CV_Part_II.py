@@ -177,12 +177,21 @@ def bigFunc(original_image, roi):
                             [750, 0],
                             [750, 750],
                             [0, 750]], dtype="float32")
+        
+        # Print the location of the four corners of the largest quadrilateral
+        print("Corners of the largest quadrilateral:")
+        for point in largest_quad:
+            print(f"\t({point[0]}, {point[1]})")
 
+        # Draw the four corners of the largest quadrilateral on a copy of the original image
+        original_image_copy = original_image.copy()
+        for point in largest_quad:
+            cv2.circle(original_image_copy, point, radius=30, color=(0, 255, 0), thickness=-1)  # -1 thickness fills the circle
         # Compute the perspective transform matrix and apply it
         M = cv2.getPerspectiveTransform(src_pts, dst_pts)
         warped_image = cv2.warpPerspective(original_image, M, (750, 750))
 
-        cv2.imshow("Original Image", rescaleFrame(original_image, 0.25))
+        cv2.imshow("Original Image with Corners", rescaleFrame(original_image_copy, 0.25))
         cv2.imshow("Plan View", warped_image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
